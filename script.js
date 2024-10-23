@@ -1,11 +1,17 @@
 /*
-1. default logic
-    when event 'onload' happes, 
-    a. make div(class label) element
-    b. using charRange(), foreach label div from a to j as 'letters'
-    c. using range, make array 'number' from 1 to 99
-
-
+default logic
+1.when event 'onload' happes, 
+    a. make div(class label) element - done
+    b. using charRange(), foreach label div from a to j as 'letters' -done
+    c. using range, make array 'number' from 1 to 99 - done
+    d. using foreach at number, make input elements and place between number element - done
+    
+2.when input changes
+    a. if value is number, nothing happens
+    b. if value is number + operator + number, change value to result. but you should do * % first
+    c. if value is cell (a1, j2) change values to that cell
+    d. if value is start from '=' parse, and apply functions
+    ... first get value, then change cell reference to numbers(using input id) -> if operator exist do operate
 */
 
 
@@ -37,9 +43,41 @@ const makeInput = (letter, number, parent) => {
     input.onchange = update;
 }
 
-//function update to get input value and parse
+/// function make operation
+const operations = {
+    "+": (x,y) => x + y,
+    "-": (x,y) => x - y,
+    "*": (x,y) => x * y,
+    "/": (x,y) => x / y,
+    "%": (x,y) => x % y
+}
+
+// functions for excel functions
+// don't use 'this' !!!!
+const excelFunctions = {
+    "sum": nums => nums.reduce((acc,cur) => acc + cur, 0),
+    "average": nums => excelFunctions.sum(nums) / nums.length,
+    "isEven": num => num % 2 === 0    
+}
+
+/*
+const sum = nums => nums.reduce((acc,cur) => acc + cur,0);
+const average = nums => sum(nums) % nums.length;
+const isEven = num => num % 2 === 0;
+*/
+
+
+const parse = (value) => {    
+
+    }
+
+
+//function update to get input value and call parse
 const update = (event) => {
-    console.log(event.target.value);
+    const value = event.target.value;
+    const cellReference = /([A-Ja-j])([0-9])([1-9])?/ig;
+    const numberReference = /(\d)+/ig
+
 }
 
 
