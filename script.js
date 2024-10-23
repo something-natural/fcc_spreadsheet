@@ -16,8 +16,9 @@ default logic
 
 
 //function range to make array from start to end numbers
-const range = (start, end) => Array(end - start + 1)
-    .fill(start)
+//use parseint for later
+const range = (start, end) => Array(parseInt(end) - parseInt(start) + 1)
+    .fill(parseInt(start))
     .map((el,index) => el + index);
 
 //function charRange to make array from start to end letters
@@ -60,24 +61,64 @@ const excelFunctions = {
     "isEven": num => num % 2 === 0    
 }
 
+const checkColon = text => {
+    const colonMatch = /([A-Ja-j])(\d+):([A-Ja-j])(\d+)/;        
+    if (text.includes(":")){
+        const getLetterNumber = text.match(colonMatch);        
+        const letters = charRange(getLetterNumber[1].toUpperCase(),getLetterNumber[3].toUpperCase());
+        const numbers = range(getLetterNumber[2],getLetterNumber[4]);
+        let result = [];
+        for ( let i = 0 ; i < letters.length ; i++){
+            for (let j = 0 ; j < numbers.length ; j++){
+                result.push(letters[i] + numbers[j]);
+            }
+        }
+        console.log(result);
+        result = result.map(el => document.getElementById(el).value)        
+        return result
+        
+    }     
+    return text;        
+}
+
+
+
 /*
-const sum = nums => nums.reduce((acc,cur) => acc + cur,0);
-const average = nums => sum(nums) % nums.length;
-const isEven = num => num % 2 === 0;
+const parse = (value, reg) => {
+    console.log(value)
+    const val = value.replace(/\s/ig, "");
+    console.log(val);
+    const cellToVal = (text) => document.getElementById(text).value;
+    val.match(reg)
+        .forEach( el => cellToVal(el));
+}
 */
-
-
-const parse = (value) => {    
-
-    }
-
 
 //function update to get input value and call parse
 const update = (event) => {
-    const value = event.target.value;
+    console.log(event.target.id);
+    //get input value
+    const value = event.target.value.replace(/\s/ig,"");
+    console.log(value);
+    //regex
     const cellReference = /([A-Ja-j])([0-9])([1-9])?/ig;
-    const numberReference = /(\d)+/ig
+    const numberReference = /^(\d)+$/ig;
+    const highOperator = /[*\/%]/;
+    const lowerOperator = /[+-]/;    
+    
+    //parse
+    //if cell number, get input value and replace. if there is ":" make array
+    //if value is null or undefined, leave it
+    //if all values are replaced, operate using stack
+    //else leave it
 
+    //check input is function or not
+    if ( value[0] === "="){
+        let text = value.slice(1)
+        text = checkColon(text);        
+        console.log(text);
+    }    
+    
 }
 
 
