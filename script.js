@@ -61,6 +61,9 @@ const excelFunctions = {
     "isEven": num => num % 2 === 0    
 }
 
+//parse functiongs
+
+//parse 1. check colon, if exist, return nums array
 const checkColon = text => {
     const colonMatch = /([A-Ja-j])(\d+):([A-Ja-j])(\d+)/;        
     if (text.includes(":")){
@@ -72,11 +75,10 @@ const checkColon = text => {
             for (let j = 0 ; j < numbers.length ; j++){
                 result.push(letters[i] + numbers[j]);
             }
-        }
-        console.log(result);
-        result = result.map(el => document.getElementById(el).value)        
+        }        
         return result
-        
+                .map(el => parseInt(document.getElementById(el).value))
+                .filter(el => !isNaN(el));
     }     
     return text;        
 }
@@ -107,10 +109,12 @@ const update = (event) => {
     const lowerOperator = /[+-]/;    
     
     //parse
-    //if cell number, get input value and replace. if there is ":" make array
-    //if value is null or undefined, leave it
-    //if all values are replaced, operate using stack
-    //else leave it
+    //1. check input start with "=" - done
+    //2. check ":". if it is, make array - done
+    //3. cell number, get input value and replace. 
+    //4. if value is null or undefined, leave it
+    //5. if all values are replaced, operate using stack
+    //6. else leave it
 
     //check input is function or not
     if ( value[0] === "="){
