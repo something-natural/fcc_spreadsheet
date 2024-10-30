@@ -56,18 +56,18 @@ const operations = {
 // functions for excel functions
 // don't use 'this' !!!!
 const excelFunctions = {
-    "sum": nums => nums.reduce((acc,cur) => acc + cur, 0),
+    "sum": nums => nums.reduce((acc,cur) => acc + cur),
     "average": nums => excelFunctions.sum(nums) / nums.length,
     "isEven": num => num % 2 === 0    
 }
 
 //parse functiongs
 
-//parse 1. check colon, if exist, return nums array
-const checkColon = text => {
+//parse 1. =sum, =average, =isEven, check colon, if exist, return nums array
+const checkColon = args => {
     const colonMatch = /([A-Ja-j])(\d+):([A-Ja-j])(\d+)/;        
-    if (text.includes(":")){
-        const getLetterNumber = text.match(colonMatch);        
+    if (args.includes(":")){
+        const getLetterNumber = args.match(colonMatch);        
         const letters = charRange(getLetterNumber[1].toUpperCase(),getLetterNumber[3].toUpperCase());
         const numbers = range(getLetterNumber[2],getLetterNumber[4]);
         let result = [];
@@ -80,9 +80,8 @@ const checkColon = text => {
                 .map(el => parseInt(document.getElementById(el).value))
                 .filter(el => !isNaN(el));
     }     
-    return text;        
+    return args;        
 }
-
 
 
 /*
@@ -98,10 +97,9 @@ const parse = (value, reg) => {
 
 //function update to get input value and call parse
 const update = (event) => {
-    console.log(event.target.id);
     //get input value
-    const value = event.target.value.replace(/\s/ig,"");
-    console.log(value);
+    const value = event.target.value.replace(/\s/ig,"");    
+    
     //regex
     const cellReference = /([A-Ja-j])([0-9])([1-9])?/ig;
     const numberReference = /^(\d)+$/ig;
@@ -109,6 +107,13 @@ const update = (event) => {
     const lowerOperator = /[+-]/;    
     
     //parse
+
+    // possible inputs : 1, text,=sum(a1,b2,c3), =a1+b2, =1+2, =sum(1,2,3,4,5), =sum(a1:b4)
+    // so if it is cell number with colon, covert to array
+    // if cell number without colone, replace cell number to value
+    // if cell value is text don't operate (alert "select numbers only")
+    // then operate
+
     //1. check input start with "=" - done
     //2. check ":". if it is, make array - done
     //3. cell number, get input value and replace. 
@@ -116,11 +121,24 @@ const update = (event) => {
     //5. if all values are replaced, operate using stack
     //6. else leave it
 
-    //check input is function or not
+    //check input is start with "="
     if ( value[0] === "="){
         let text = value.slice(1)
-        text = checkColon(text);        
-        console.log(text);
+
+        //check function or simple operation
+        const checkFunctionText = /^([A-Za-z]+)\((.*)\)$/;
+        const alterText = text.match(checkFunctionText)[0];
+        if ( text === alterText){
+            //if it is function,
+            console.log(alterText)
+            //check it is using colon
+            let args = checkColon(text.match(checkFunctionText)[2]);     
+            console.log(args);
+            // call functions and replace event.target.value with result
+            console.log(excelFunctions[text.match(checkFunctionText)[1]]);
+            event.target.value = excelFunctions[text.match(checkFunctionText)[1]](args);
+        } 
+        
     }    
     
 }
