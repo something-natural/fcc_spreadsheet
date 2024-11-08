@@ -49,20 +49,33 @@ const operations = {
     "+": (x,y) => x + y,
     "-": (x,y) => x - y,
     "*": (x,y) => x * y,
-    "/": (x,y) => x / y,
-    "%": (x,y) => x % y
+    "/": (x,y) => x / y    
 }
 
 // functions for excel functions
 // don't use 'this' !!!!
+const sum = nums => nums.reduce((acc,cur) => acc + cur,0);
+const average = nums => sum(nums) / nums.length;
+const iseven =  num => num % 2 === 0 ;
+const firsttwo = nums => nums.sort((a,b) => a - b).slice(0,2);
+const lasttwo = nums => nums.sort((a,b) => a - b).slice(-2);
+const median = nums => {
+    const sorted = nums.sort((a,b) => a - b);    
+    return sorted.length % 2 === 0 ? average([sorted[sorted.length / 2 - 1], sorted[sorted.length / 2]]) : sorted[Math.floor(sorted.length / 2)]
+}
+const countif = (nums,arg) => nums.filter(el => el === arg).length;
+
 const excelFunctions = {
-    "sum": nums => nums.reduce((acc,cur) => acc + cur),
-    "average": nums => excelFunctions.sum(nums) / nums.length,
-    "isEven": num => num % 2 === 0    
+    sum,
+    average,
+    iseven,
+    firsttwo,
+    lasttwo,
+    median,
+    countif
 }
 
-//parse functiongs
-
+//parse functions
 //parse 1. =sum, =average, =isEven, check colon, if exist, return nums array
 const checkColon = args => {
     const colonMatch = /([A-Ja-j])(\d+):([A-Ja-j])(\d+)/;        
