@@ -1,20 +1,3 @@
-/*
-default logic
-1.when event 'onload' happes, 
-    a. make div(class label) element - done
-    b. using charRange(), foreach label div from a to j as 'letters' -done
-    c. using range, make array 'number' from 1 to 99 - done
-    d. using foreach at number, make input elements and place between number element - done
-    
-2.when input changes
-    a. if value is number, nothing happens
-    b. if value is number + operator + number, change value to result. but you should do * % first
-    c. if value is cell (a1, j2) change values to that cell
-    d. if value is start from '=' parse, and apply functions
-    ... first get value, then change cell reference to numbers(using input id) -> if operator exist do operate
-*/
-
-
 //function range to make array from start to end numbers
 //use parseint for later
 const range = (start, end) => Array(parseInt(end) - parseInt(start) + 1)
@@ -44,43 +27,37 @@ const makeInput = (letter, number, parent) => {
     input.onchange = update;
 }
 
-/// function make operation
-const operations = {
+/// fourBasicOperations
+const fourBasicOperations = {
     "+": (x,y) => x + y,
     "-": (x,y) => x - y,
     "*": (x,y) => x * y,
     "/": (x,y) => x / y    
 }
 
-// functions for excel functions
-// don't use 'this' !!!!
-const sum = nums => nums.reduce((acc,cur) => acc + cur,0);
-const average = nums => sum(nums) / nums.length;
-const iseven =  num => num % 2 === 0 ;
-const firsttwo = nums => nums.sort((a,b) => a - b).slice(0,2);
-const lasttwo = nums => nums.sort((a,b) => a - b).slice(-2);
-const median = nums => {
-    const sorted = nums.sort((a,b) => a - b);    
-    return sorted.length % 2 === 0 ? average([sorted[sorted.length / 2 - 1], sorted[sorted.length / 2]]) : sorted[Math.floor(sorted.length / 2)]
-}
-const countif = (nums,arg) => nums.filter(el => el === arg).length;
-
+// excel functions. don't use 'this' !!!!
 const excelFunctions = {
-    sum,
-    average,
-    iseven,
-    firsttwo,
-    lasttwo,
-    median,
-    countif
+    sum: nums => nums.reduce((acc,cur) => acc + cur,0),
+    average: nums => sum(nums) / nums.length,
+    iseven: num => num % 2 === 0,
+    firsttwo: nums => nums.sort((a,b) => a - b).slice(0,2),
+    lasttwo: nums => nums.sort((a,b) => a - b).slice(-2),
+    median: nums => {
+        const sorted = nums.sort((a,b) => a - b);    
+        return sorted.length % 2 === 0 ? average([sorted[sorted.length / 2 - 1], sorted[sorted.length / 2]]) : sorted[Math.floor(sorted.length / 2)]
+    },
+    countif: (nums,arg) => nums.filter(el => el === arg).length
 }
 
 //parse functions
 //parse 1. =sum, =average, =isEven, check colon, if exist, return nums array
+/*
 const checkColon = args => {
-    const colonMatch = /([A-Ja-j])(\d+):([A-Ja-j])(\d+)/;        
+    const colonMatch = /([A-Ja-j])(\d+):([A-Ja-j])(\d+)/;
     if (args.includes(":")){
-        const getLetterNumber = args.match(colonMatch);        
+        
+
+          const getLetterNumber = args.match(colonMatch);        
         const letters = charRange(getLetterNumber[1].toUpperCase(),getLetterNumber[3].toUpperCase());
         const numbers = range(getLetterNumber[2],getLetterNumber[4]);
         let result = [];
@@ -91,72 +68,73 @@ const checkColon = args => {
         }        
         return result
                 .map(el => parseInt(document.getElementById(el).value))
-                .filter(el => !isNaN(el));
+                .filter(el => !isNaN(el))
+  
     }     
     return args;        
 }
-
-
-/*
-const parse = (value, reg) => {
-    console.log(value)
-    const val = value.replace(/\s/ig, "");
-    console.log(val);
-    const cellToVal = (text) => document.getElementById(text).value;
-    val.match(reg)
-        .forEach( el => cellToVal(el));
-}
 */
 
-//function update to get input value and call parse
-const update = (event) => {
-    //get input value
-    const value = event.target.value.replace(/\s/ig,"");    
-    
+/*
     //regex
     const cellReference = /([A-Ja-j])([0-9])([1-9])?/ig;
     const numberReference = /^(\d)+$/ig;
     const highOperator = /[*\/%]/;
     const lowerOperator = /[+-]/;    
+
+
+    const checkFunctionText = /^([A-Za-z]+)\((.*)\)$/;
+    const alterText = text.match(checkFunctionText)[0];
+    if ( text === alterText){
+        //if it is function,
+        console.log(alterText)
+        //check it is using colon
+        let args = checkColon(text.match(checkFunctionText)[2]);     
+        console.log(args);
+        // call functions and replace event.target.value with result
+        console.log(excelFunctions[text.match(checkFunctionText)[1]]);
+        event.target.value = excelFunctions[text.match(checkFunctionText)[1]](args);
+    } 
+
+*/
+
+const parser = (parsingTarget) => {
+    // so you are expecting
+    // 1. =sum(a1:b2), sum(a1,b2,c3), sum(a1,b2,c3,a2*b2,) countif(a1:a13, a1)
+    // 2. =sum(1,2,3,4,5), sum(1,2,3*4,12/2)
+    // 3. =1*3-2
+    // so if there is no ":", just replace all cell id with its value, handle, */+- then handle excelfunction text
+    // if there is ":", get character, nums, and make charcter + nums array, then replace all cell id with its value, handle, */+- then handle excelfunction text
     
-    //parse
+    
+    //functions
 
-    // possible inputs : 1, text,=sum(a1,b2,c3), =a1+b2, =1+2, =sum(1,2,3,4,5), =sum(a1:b4)
-    // so if it is cell number with colon, covert to array
-    // if cell number without colone, replace cell number to value
-    // if cell value is text don't operate (alert "select numbers only")
-    // then operate
 
-    //1. check input start with "=" - done
-    //2. check ":". if it is, make array - done
-    //3. cell number, get input value and replace. 
-    //4. if value is null or undefined, leave it
-    //5. if all values are replaced, operate using stack
-    //6. else leave it
+    //functions to replace cell id with ist value. you should return text not array, to handle "=A1+B1" => 1+2
+    const getCellValue = id => document.getElementById(id).value;
+    const cellIdRegex = /[A-Ja-j][1-9][0-9]?/g;
+    const cellToValue = text => text.replace(cellIdRegex, match => getCellValue(match));    
+    //return cellToValue(parsingTarget)
 
-    //check input is start with "="
-    if ( value[0] === "="){
-        let text = value.slice(1)
-
-        //check function or simple operation
-        const checkFunctionText = /^([A-Za-z]+)\((.*)\)$/;
-        const alterText = text.match(checkFunctionText)[0];
-        if ( text === alterText){
-            //if it is function,
-            console.log(alterText)
-            //check it is using colon
-            let args = checkColon(text.match(checkFunctionText)[2]);     
-            console.log(args);
-            // call functions and replace event.target.value with result
-            console.log(excelFunctions[text.match(checkFunctionText)[1]]);
-            event.target.value = excelFunctions[text.match(checkFunctionText)[1]](args);
-        } 
-        
-    }    
     
 }
 
+//function update to get input value and call parser
+const update = (event) => {
+    //get input value
+    const inputValue = event.target.value.replace(/\s/g,"");
+     //check input is start with "="
+    if ( inputValue[0] === "="){                
+        let parsingTarget = inputValue.slice(1)        
+        //check function or simple operation
+        event.target.value = parser(parsingTarget);
+    }        
+}
 
+
+
+
+// init spreadsheet
 window.onload = () => {
     //make container as sheet
     const container = document.getElementById("container");                       
