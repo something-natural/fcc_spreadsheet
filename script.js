@@ -46,41 +46,51 @@ const excelFunctions = {
         const sorted = nums.sort((a,b) => a - b);    
         return sorted.length % 2 === 0 ? average([sorted[sorted.length / 2 - 1], sorted[sorted.length / 2]]) : sorted[Math.floor(sorted.length / 2)]
     },
-    countif: (nums,arg) => nums.filter(el => el === arg).length
+    countif: nums => nums.filter(el => el === nums[-1]).length // =countif(A1:A88, A1) => countif(1,2,3,4,5......, 1) so you should use last index[-1] of array
 }
 
 
 const parser = (parsingTarget) => {
     // so you are expecting
-    // 1. =sum(a1:b2), sum(a1,b2,c3), sum(a1,b2,c3,a2*b2,) countif(a1:a13, a1)
-    // 2. =sum(1,2,3,4,5), sum(1,2,3*4,12/2)
-    // 3. =1*3-2
-    // if there is ":", get character, nums, and make charcter + nums array. in other words, make cell id array from colon. ( a1:c3  => a1, a2, a3, b1, b2, b3, c1, c2, c3)
-    // then replace all cell id with its value, handle, */+- 
-    // then handle excelfunction text    
+    // =sum(a1:b2), sum(a1,b2,c3), sum(a1,b2,c3,a2*b2,) countif(a1:a13, a1)
+    // =sum(1,2,3,4,5), sum(1,2,3*4,12/2)
+    // =1*3-2
+    // 1. if there is ":", get character, nums, and make charcter + nums array. in other words, make cell id array from colon. ( a1:c3  => a1, a2, a3, b1, b2, b3, c1, c2, c3)
+    // 2. then replace all cell id with its value
+    // 3. handle */+- 
+    // 4. then handle excelfunction text    
 
-
+    //function to get cell input value from cell id
     const getCellValue = id => document.getElementById(id).value;
     
-    //functions to handle ":"
+    //to handle ":"
     const cellRangeRegex = /([A-Ja-j])([1-9][0-9]?):([A-Ja-j])([1-9][0-9]?)/;
-    const charNumToInputValue = char1 => char2 => num => charRange(char1, char2).map(el => getCellValue(el + num));    
-    const cellRangeToInputValue = text => text.replace(cellRangeRegex, (match, char1, num1, char2, num2) => 
-                                                    range(num1, num2).map(num => charNumToInputValue(char1)(char2)(num)))    
+    const charNumToInputValue = char1 => char2 => num => charRange(char1, char2).map(el => getCellValue(el + num));  // call getCellValue function with 'num' array and two char args
+    const cellRangeToInputValue = text => text.replace(cellRangeRegex, (_match, char1, num1, char2, num2) => 
+                                                    range(num1, num2).map(num => charNumToInputValue(char1)(char2)(num)))    // parse cell id ranges from text, and make num array, call charNumToInputValue
 
-    //functions to replace cell id with ist value. you should return text not array, to handle "=A1+B1" => 1+2    
+    //to handle cell id only
     const cellIdRegex = /[A-Ja-j][1-9][0-9]?/g;
-    const cellIdToInputValue = text => text.replace(cellIdRegex, match => getCellValue(match));        
-
-    // let's rock
-    const readyToFourOps = cellIdToInputValue(cellRangeToInputValue(parsingTarget))
-    // now your "=sum(A1:C3)","=A1,B1,C1:D1, E1+F1" are converted to "=sum(1,2,3,4,5,6,7,8,9)", =1,2,3,4,5+6
-    console.log(readyToFourOps);
-    //first, hand four basic operations first
+    const cellIdToInputValue = text => text.replace(cellIdRegex, match => getCellValue(match)); // parse idividual cell id from text, call getCellValue
+   
+    //to handle four basic operations
     const multiDivRegex = /([\d]\s?)([*\/])([\s]?[\d])/; // don't make global. because you should convert using recursive method    
-    const plusMinusRegex =  /([\d]\s?)([+-])([\s]?[\d])/
-    const applyFourOps = (text, regex) => text.replace(regex, (match, arg1, ops, arg2) => fourBasicOperations[ops](arg1,arg2) )
+    const plusMinusRegex =  /([\d]\s?)([+-])([\s]?[\d])/; // same as above
+    const applyFourOps = (text, regex) => {
+        const result = text.replace(regex, (_match, arg1, ops, arg2) => fourBasicOperations[ops](parseFloat(arg1),parseFloat(arg2) ))
+        return text === result ? result : applyFourOps(result,regex)
+    };
     
+    //to handle exelfunctions
+    const funcRegex = /([A-Za-z]+)\(([\w].+)\)/;
+    const applyFunction = (text, regex) => text.replace(regex, (_match, func, values) => excelFunctions[func]([values])); // at this point, there are olny float numbers in values array. so try parseFloat forEach?
+
+    // now, do 1, 2
+    const readyToFourOps = cellIdToInputValue(cellRangeToInputValue(parsingTarget));
+    // then do 3
+    const readyToFunc = applyFourOps(applyFourOps(readyToFourOps, multiDivRegex), plusMinusRegex);
+    // last do 4
+    return applyFunction(readyToFunc);    
 }
 
 //function update to get input value and call parser
