@@ -73,10 +73,15 @@ const parser = (parsingTarget) => {
     const cellIdToInputValue = text => text.replace(cellIdRegex, match => getCellValue(match));        
 
     // let's rock
-    const readyToHandle = cellIdToInputValue(cellRangeToInputValue(parsingTarget))    
-    console.log(readyToHandle);
+    const readyToFourOps = cellIdToInputValue(cellRangeToInputValue(parsingTarget))
+    // now your "=sum(A1:C3)","=A1,B1,C1:D1, E1+F1" are converted to "=sum(1,2,3,4,5,6,7,8,9)", =1,2,3,4,5+6
+    console.log(readyToFourOps);
+    //first, hand four basic operations first
+    const multiDivRegex = /([\d]\s?)([*\/])([\s]?[\d])/; // don't make global. because you should convert using recursive method    
+    const plusMinusRegex =  /([\d]\s?)([+-])([\s]?[\d])/
+    const applyFourOps = (text, regex) => text.replace(regex, (match, arg1, ops, arg2) => fourBasicOperations[ops](arg1,arg2) )
+    
 }
-
 
 //function update to get input value and call parser
 const update = (event) => {
