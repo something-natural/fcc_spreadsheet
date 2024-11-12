@@ -49,75 +49,34 @@ const excelFunctions = {
     countif: (nums,arg) => nums.filter(el => el === arg).length
 }
 
-//parse functions
-//parse 1. =sum, =average, =isEven, check colon, if exist, return nums array
-/*
-const checkColon = args => {
-    const colonMatch = /([A-Ja-j])(\d+):([A-Ja-j])(\d+)/;
-    if (args.includes(":")){
-        
-
-          const getLetterNumber = args.match(colonMatch);        
-        const letters = charRange(getLetterNumber[1].toUpperCase(),getLetterNumber[3].toUpperCase());
-        const numbers = range(getLetterNumber[2],getLetterNumber[4]);
-        let result = [];
-        for ( let i = 0 ; i < letters.length ; i++){
-            for (let j = 0 ; j < numbers.length ; j++){
-                result.push(letters[i] + numbers[j]);
-            }
-        }        
-        return result
-                .map(el => parseInt(document.getElementById(el).value))
-                .filter(el => !isNaN(el))
-  
-    }     
-    return args;        
-}
-*/
-
-/*
-    //regex
-    const cellReference = /([A-Ja-j])([0-9])([1-9])?/ig;
-    const numberReference = /^(\d)+$/ig;
-    const highOperator = /[*\/%]/;
-    const lowerOperator = /[+-]/;    
-
-
-    const checkFunctionText = /^([A-Za-z]+)\((.*)\)$/;
-    const alterText = text.match(checkFunctionText)[0];
-    if ( text === alterText){
-        //if it is function,
-        console.log(alterText)
-        //check it is using colon
-        let args = checkColon(text.match(checkFunctionText)[2]);     
-        console.log(args);
-        // call functions and replace event.target.value with result
-        console.log(excelFunctions[text.match(checkFunctionText)[1]]);
-        event.target.value = excelFunctions[text.match(checkFunctionText)[1]](args);
-    } 
-
-*/
 
 const parser = (parsingTarget) => {
     // so you are expecting
     // 1. =sum(a1:b2), sum(a1,b2,c3), sum(a1,b2,c3,a2*b2,) countif(a1:a13, a1)
     // 2. =sum(1,2,3,4,5), sum(1,2,3*4,12/2)
     // 3. =1*3-2
-    // so if there is no ":", just replace all cell id with its value, handle, */+- then handle excelfunction text
-    // if there is ":", get character, nums, and make charcter + nums array, then replace all cell id with its value, handle, */+- then handle excelfunction text
-    
-    
-    //functions
+    // if there is ":", get character, nums, and make charcter + nums array. in other words, make cell id array from colon. ( a1:c3  => a1, a2, a3, b1, b2, b3, c1, c2, c3)
+    // then replace all cell id with its value, handle, */+- 
+    // then handle excelfunction text    
 
 
-    //functions to replace cell id with ist value. you should return text not array, to handle "=A1+B1" => 1+2
     const getCellValue = id => document.getElementById(id).value;
-    const cellIdRegex = /[A-Ja-j][1-9][0-9]?/g;
-    const cellToValue = text => text.replace(cellIdRegex, match => getCellValue(match));    
-    //return cellToValue(parsingTarget)
-
     
+    //functions to handle ":"
+    const cellRangeRegex = /([A-Ja-j])([1-9][0-9]?):([A-Ja-j])([1-9][0-9]?)/;
+    const charNumToInputValue = char1 => char2 => num => charRange(char1, char2).map(el => getCellValue(el + num));    
+    const cellRangeToInputValue = text => text.replace(cellRangeRegex, (match, char1, num1, char2, num2) => 
+                                                    range(num1, num2).map(num => charNumToInputValue(char1)(char2)(num)))    
+
+    //functions to replace cell id with ist value. you should return text not array, to handle "=A1+B1" => 1+2    
+    const cellIdRegex = /[A-Ja-j][1-9][0-9]?/g;
+    const cellIdToInputValue = text => text.replace(cellIdRegex, match => getCellValue(match));        
+
+    // let's rock
+    const readyToHandle = cellIdToInputValue(cellRangeToInputValue(parsingTarget))    
+    console.log(readyToHandle);
 }
+
 
 //function update to get input value and call parser
 const update = (event) => {
@@ -130,7 +89,6 @@ const update = (event) => {
         event.target.value = parser(parsingTarget);
     }        
 }
-
 
 
 
