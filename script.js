@@ -37,16 +37,17 @@ const fourBasicOperations = {
 
 // excel functions. don't use 'this' !!!!
 const excelFunctions = {
-    sum: nums => nums.reduce((acc,cur) => acc + cur,0),
-    average: nums => sum(nums) / nums.length,
-    iseven: num => num % 2 === 0,
-    firsttwo: nums => nums.sort((a,b) => a - b).slice(0,2),
-    lasttwo: nums => nums.sort((a,b) => a - b).slice(-2),
-    median: nums => {
+    sum: (nums) => nums.reduce((acc,cur) => acc + cur),
+    average: (nums) => excelFunctions.sum(nums) / nums.length,
+    iseven: (num) => num % 2 === 0,
+    firsttwo: (nums) => nums.sort((a,b) => a - b).slice(0,2),
+    lasttwo: (nums) => nums.sort((a,b) => a - b).slice(-2),
+    median: (nums) => {
         const sorted = nums.sort((a,b) => a - b);    
-        return sorted.length % 2 === 0 ? average([sorted[sorted.length / 2 - 1], sorted[sorted.length / 2]]) : sorted[Math.floor(sorted.length / 2)]
+        return sorted.length % 2 === 0 ? excelFunctions.average([sorted[sorted.length / 2 - 1], sorted[sorted.length / 2]]) : sorted[Math.floor(sorted.length / 2)]
     },
-    countif: nums => nums.filter(el => el === nums[-1]).length // =countif(A1:A88, A1) => countif(1,2,3,4,5......, 1) so you should use last index[-1] of array
+    countif: (nums) => nums.slice(-1).filter(el => el === nums[nums.length - 1]).length 
+    // =countif(A1:A88, A1) => countif(1,2,3,4,5......, 1) so you should use last index of array to slice, then filter
 }
 
 
@@ -73,30 +74,31 @@ const parser = (parsingTarget) => {
     const cellIdRegex = /[A-Ja-j][1-9][0-9]?/g;
     const cellIdToInputValue = text => text.replace(cellIdRegex, match => getCellValue(match)); // parse idividual cell id from text, call getCellValue
    
-    //to handle four basic operations
-    const multiDivRegex = /([\d]\s?)([*\/])([\s]?[\d])/; // don't make global. because you should convert using recursive method    
-    const plusMinusRegex =  /([\d]\s?)([+-])([\s]?[\d])/; // same as above
+    //to handle four basic operations.
+    const multiDivRegex = /([\d])([*\/])([\d])/; // don't make global. because you should convert using recursive method    
+    const plusMinusRegex =  /([\d])([+-])([\d])/; // same as above
     const applyFourOps = (text, regex) => {
         const result = text.replace(regex, (_match, arg1, ops, arg2) => fourBasicOperations[ops](parseFloat(arg1),parseFloat(arg2) ))
         return text === result ? result : applyFourOps(result,regex)
     };
     
-    //to handle exelfunctions
+    //to handle exelfunctions. don't forge parseFloat!
     const funcRegex = /([A-Za-z]+)\(([\w].+)\)/;
-    const applyFunction = (text, regex) => text.replace(regex, (_match, func, values) => excelFunctions[func]([values])); // at this point, there are olny float numbers in values array. so try parseFloat forEach?
-
+    const applyFunction = (text, regex) => text.replace(regex, (_match, func, values) => excelFunctions[`${func}`](values.split(",").map(el => parseFloat(el)))) 
+    
     // now, do 1, 2
     const readyToFourOps = cellIdToInputValue(cellRangeToInputValue(parsingTarget));
     // then do 3
     const readyToFunc = applyFourOps(applyFourOps(readyToFourOps, multiDivRegex), plusMinusRegex);
+    console.log(readyToFunc)
     // last do 4
-    return applyFunction(readyToFunc);    
+    return applyFunction(readyToFunc, funcRegex);    
 }
 
 //function update to get input value and call parser
 const update = (event) => {
     //get input value
-    const inputValue = event.target.value.replace(/\s/g,"");
+    const inputValue = event.target.value.replace(/\s/g,""); // because of this, you don't need blank regex later
      //check input is start with "="
     if ( inputValue[0] === "="){                
         let parsingTarget = inputValue.slice(1)        
