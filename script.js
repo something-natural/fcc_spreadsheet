@@ -36,17 +36,27 @@ const fourBasicOperations = {
 }
 
 // excel functions. don't use 'this' !!!!
+const sum = nums => nums.reduce((acc,cur) => acc + cur,0);
+const average = nums => sum(nums) / nums.length;
+const iseven = num => num % 2 === 0;
+const firsttwo = nums => nums.sort((a,b) => a - b).slice(0,2);
+const lasttwo = nums => nums.sort((a,b) => a - b).slice(-2);
+const median = nums => {
+    const sorted = nums.sort((a,b) => a - b);    
+    return sorted.length % 2 === 0 ? excelFunctions.average([sorted[sorted.length / 2 - 1], sorted[sorted.length / 2]]) : sorted[Math.floor(sorted.length / 2)]
+    }
+const countif = nums => nums.slice(-1).filter(el => el === nums[nums.length - 1]).length 
+
 const excelFunctions = {
-    sum: (nums) => nums.reduce((acc,cur) => acc + cur),
-    average: (nums) => excelFunctions.sum(nums) / nums.length,
-    iseven: (num) => num % 2 === 0,
-    firsttwo: (nums) => nums.sort((a,b) => a - b).slice(0,2),
-    lasttwo: (nums) => nums.sort((a,b) => a - b).slice(-2),
-    median: (nums) => {
-        const sorted = nums.sort((a,b) => a - b);    
-        return sorted.length % 2 === 0 ? excelFunctions.average([sorted[sorted.length / 2 - 1], sorted[sorted.length / 2]]) : sorted[Math.floor(sorted.length / 2)]
-    },
-    countif: (nums) => nums.slice(-1).filter(el => el === nums[nums.length - 1]).length 
+    sum,
+    average,
+    iseven,
+    someeven: nums => nums.some(iseven),
+    everyeven: nums => nums.every(iseven),
+    firsttwo,
+    lasttwo,
+    median,
+    countif
     // =countif(A1:A88, A1) => countif(1,2,3,4,5......, 1) so you should use last index of array to slice, then filter
 }
 
@@ -83,8 +93,10 @@ const parser = (parsingTarget) => {
     };
     
     //to handle exelfunctions. don't forge parseFloat!
-    const funcRegex = /([A-Za-z]+)\(([\w].+)\)/;
-    const applyFunction = (text, regex) => text.replace(regex, (_match, func, values) => excelFunctions[`${func}`](values.split(",").map(el => parseFloat(el)))) 
+    const funcRegex = /([A-Za-z]+)\(([\w].*)\)/; // you should user * for captureg group 2 for value length is just 1
+    const applyFunction = (text, regex) => text.replace(regex, (_match, func, values) => 
+                                                            excelFunctions[func.toLowerCase()](values.split(",").map(el => parseFloat(el)))
+                                                        ) 
     
     // now, do 1, 2
     const readyToFourOps = cellIdToInputValue(cellRangeToInputValue(parsingTarget));
